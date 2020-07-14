@@ -13,7 +13,7 @@ TetrixBoard::TetrixBoard(QWidget* parent)
     setFocusPolicy(Qt::StrongFocus);
     clearBoard();
 
-    //nextPiece.setRandomShape();
+    nextPiece.setRandomShape();
     nextPiece.setRandomColor();
 }
 
@@ -266,13 +266,13 @@ void TetrixBoard::removeFullLines()
                     coordsFullLine[detectCounter][0] = j;
                     coordsFullLine[detectCounter][1] = i;
                     detectCounter += 1;
-                }
-                else
-                {
-                    if (detectCounter >= 5)
+                    if (detectCounter == dieLine)
                     {
                         break;
                     }
+                }
+                else
+                {
                     for (int k = 0; k < 10; k++)
                     {
                         for (int l = 0; l < 2; l++)
@@ -350,14 +350,13 @@ void TetrixBoard::removeFullLines()
                     coordsFullLine[detectCounter][0] = j;
                     coordsFullLine[detectCounter][1] = i;
                     detectCounter += 1;
-                }
-                else
-                {
-                    if (detectCounter >= 5)
+                    if (detectCounter == dieLine)
                     {
                         break;
                     }
-
+                }
+                else
+                {
                     for (int k = 0; k < 10; k++)
                     {
                         for (int l = 0; l < 2; l++)
@@ -392,11 +391,11 @@ void TetrixBoard::removeFullLines()
 void TetrixBoard::newPiece()
 {
     curPiece = nextPiece;
-    nextPiece.setSquareShape();
+    nextPiece.setRandomShape();
     nextPiece.setRandomColor();
     showNextPiece();
     curX = BoardWidth / 2 + 1;
-    curY = BoardHeight - 0.1;
+    curY = BoardHeight - 1;
 
     if (!tryMove(curPiece, curX, curY)) {
         curPiece.setShape(NoShape);
@@ -415,16 +414,16 @@ void TetrixBoard::showNextPiece()
     if (!nextPieceLabel)
         return;
 
-    int dx = 1;
-    int dy = 1;
+    int dx = nextPiece.maxX() - nextPiece.minX() + 1;
+    int dy = nextPiece.maxY() - nextPiece.minY() + 1;
 
     QPixmap pixmap(dx * squareWidth(), dy * squareHeight());
     QPainter painter(&pixmap);
     painter.fillRect(pixmap.rect(), nextPieceLabel->palette().window());
 
     for (int i = 0; i < 4; ++i) {
-        int x = nextPiece.x(i);
-        int y = nextPiece.y(i);
+        int x = nextPiece.x(i) - nextPiece.minX();
+        int y = nextPiece.y(i) - nextPiece.minY();
         drawSquare(painter, x * squareWidth(), y * squareHeight(),
             nextPiece.getColor());
     }

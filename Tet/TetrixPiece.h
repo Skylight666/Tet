@@ -2,7 +2,8 @@
 #include <QColor>
 
 enum TetrixShape {
-    NoShape, Square
+    NoShape, ZShape, SShape, LineShape, TShape, SquareShape,
+    LShape, MirroredLShape, Kek
 };
 
 class TetrixPiece
@@ -11,7 +12,7 @@ public:
     TetrixPiece() { setShape(NoShape); }
 
     void setRandomColor();
-    void setSquareShape();
+    void setRandomShape();
 
     void setShape(TetrixShape shape);
     void setColor(int idxInTable);
@@ -21,6 +22,10 @@ public:
     TetrixShape shape() const { return pieceShape; }
     int x(int index) const { return coords[index][0]; }
     int y(int index) const { return coords[index][1]; }
+    int minX() const;
+    int maxX() const;
+    int minY() const;
+    int maxY() const;
 
 private:
     void setX(int index, int x) { coords[index][0] = x; }
