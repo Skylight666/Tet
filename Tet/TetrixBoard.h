@@ -5,9 +5,7 @@
 
 #include "TetrixPiece.h"
 
-QT_BEGIN_NAMESPACE
 class QLabel;
-QT_END_NAMESPACE
 
 class TetrixBoard : public QFrame
 {
@@ -17,10 +15,9 @@ public:
     TetrixBoard(QWidget* parent = nullptr);
 
     void setNextPieceLabel(QLabel* label);
-    QSize sizeHint() const override;
-    QSize minimumSizeHint() const override;
 
-public slots:
+public 
+slots:
     void start();
     void pause();
 

@@ -16,7 +16,6 @@ TetrixWindow::TetrixWindow(QWidget* parent)
 
     board->setNextPieceLabel(nextPieceLabel);
 
-    //todo Счётчики переименовать 
     scoreLcd = new QLCDNumber(5);
     scoreLcd->setSegmentStyle(QLCDNumber::Filled);
     levelLcd = new QLCDNumber(2);
@@ -36,16 +35,7 @@ TetrixWindow::TetrixWindow(QWidget* parent)
     connect(startButton, &QPushButton::clicked, board, &TetrixBoard::start);
     connect(quitButton, &QPushButton::clicked, qApp, &QCoreApplication::quit);
     connect(pauseButton, &QPushButton::clicked, board, &TetrixBoard::pause);
-/*
-#if __cplusplus >= 201402L
-    connect(board, &TetrixBoard::scoreChanged,
-        scoreLcd, qOverload<int>(&QLCDNumber::display));
-    connect(board, &TetrixBoard::levelChanged,
-        levelLcd, qOverload<int>(&QLCDNumber::display));
-    connect(board, &TetrixBoard::linesRemovedChanged,
-        linesLcd, qOverload<int>(&QLCDNumber::display));
-#else
-*/
+
     //Коннекты для счётчиков
     connect(board, &TetrixBoard::scoreChanged,
         scoreLcd, QOverload<int>::of(&QLCDNumber::display));
@@ -53,7 +43,7 @@ TetrixWindow::TetrixWindow(QWidget* parent)
         levelLcd, QOverload<int>::of(&QLCDNumber::display));
     connect(board, &TetrixBoard::linesRemovedChanged,
         linesLcd, QOverload<int>::of(&QLCDNumber::display));
-//#endif
+
     //Сетка с добавлением всего и вся
     QGridLayout* layout = new QGridLayout;
     layout->addWidget(createLabel(tr("NEXT")), 0, 0);

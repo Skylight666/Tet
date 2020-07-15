@@ -13,25 +13,13 @@ TetrixBoard::TetrixBoard(QWidget* parent)
     setFocusPolicy(Qt::StrongFocus);
     clearBoard();
 
-    nextPiece.setRandomShape();
+    nextPiece.setSquareShape();
     nextPiece.setRandomColor();
 }
 
 void TetrixBoard::setNextPieceLabel(QLabel* label)
 {
     nextPieceLabel = label;
-}
-
-QSize TetrixBoard::sizeHint() const
-{
-    return QSize(BoardWidth * 15 + frameWidth() * 2,
-        BoardHeight * 15 + frameWidth() * 2);
-}
-
-QSize TetrixBoard::minimumSizeHint() const
-{
-    return QSize(BoardWidth * 5 + frameWidth() * 2,
-        BoardHeight * 5 + frameWidth() * 2);
 }
 
 void TetrixBoard::start()
@@ -73,8 +61,9 @@ void TetrixBoard::pause()
 void TetrixBoard::paintEvent(QPaintEvent* event)
 {
 
-    static constexpr QRgb colorTable[4] = {
-    0x000000, 0xCC6666, 0x66CC66, 0x6666CC
+    static constexpr QRgb colorTable[8] = {
+    0x000000, 0xCC6666, 0x66CC66, 0x6666CC,
+    0xCCCC66, 0xCC66CC, 0x66CCCC, 0xDAAA00
     };
 
     QFrame::paintEvent(event);
@@ -139,7 +128,7 @@ void TetrixBoard::keyPressEvent(QKeyEvent* event)
     case Qt::Key_Space:
         dropDown();
         break;
-    case Qt::Key_D:
+    case Qt::Key_Down:
         oneLineDown();
         break;
     default:
@@ -199,7 +188,7 @@ void TetrixBoard::pieceDropped(int dropHeight)
     }
 
     ++numPiecesDropped;
-    if (numPiecesDropped % 25 == 0) {
+    if (numPiecesDropped % 10 == 0) {
         ++level;
         timer.start(timeoutTime(), this);
         emit levelChanged(level);
@@ -216,11 +205,23 @@ void TetrixBoard::pieceDropped(int dropHeight)
 void TetrixBoard::removeFullLines()
 {
     int numFullLines = 0;
+    int horizonLevel = -1;
+    int coordsFullLine[10][2] = {};
+    bool lineIsFull = false;
+    int detectCounter = 0;
 
     for (int i = BoardHeight - 1; i >= 0; --i) {
-        bool lineIsFull = false;
+        lineIsFull = false;
+        horizonLevel = -1;
 
-        int coordsFullLine[10][2] = {};
+        for (int k = 0; k < 10; k++)
+        {
+            for (int l = 0; l < 2; l++)
+            {
+                coordsFullLine[k][l] = -1;
+            }
+        }
+
         QColor prevColor = 0x111111;
         int dieLine = 0;
 
@@ -257,8 +258,7 @@ void TetrixBoard::removeFullLines()
 
         if (lineIsFull)
         {
-
-            int detectCounter = 0;
+            detectCounter = 0;
             for (int j = 0; j < BoardWidth; ++j)
             {
                 if (colorAt(j, i) == prevColor)
@@ -266,13 +266,15 @@ void TetrixBoard::removeFullLines()
                     coordsFullLine[detectCounter][0] = j;
                     coordsFullLine[detectCounter][1] = i;
                     detectCounter += 1;
-                    if (detectCounter == dieLine)
-                    {
-                        break;
-                    }
+
                 }
                 else
                 {
+                    if (detectCounter >= 5)
+                    {
+                        break;
+                    }
+
                     for (int k = 0; k < 10; k++)
                     {
                         for (int l = 0; l < 2; l++)
@@ -285,26 +287,15 @@ void TetrixBoard::removeFullLines()
             }
 
             ++numFullLines;
-
-            for (int l = 0; l < detectCounter; ++l)
-                shapeAt(coordsFullLine[l][0], BoardHeight - 1) = NoShape;
-
-            for (int k = i; k < BoardHeight - 1; ++k)
-            {
-                for (int l = 0; l < detectCounter; ++l)
-                {
-                    shapeAt(coordsFullLine[l][0], k) = shapeAt(coordsFullLine[l][0], k + 1);
-                    colorAt(coordsFullLine[l][0], k) = colorAt(coordsFullLine[l][0], k + 1);
-                }
-
-            }
+            horizonLevel = i;
+            break;
         }
     }
 
     for (int j = 0; j < BoardWidth; ++j) {
-        bool lineIsFull = false;
+        bool colIsFull = false;
 
-        int coordsFullLine[10][2] = {};
+        int coordsFullCol[10][2] = {};
         QColor prevColor = 0x111111;
         int dieLine = 0;
 
@@ -327,7 +318,7 @@ void TetrixBoard::removeFullLines()
                     dieLine += 1;
                     if (dieLine >= 5)
                     {
-                        lineIsFull = true;
+                        colIsFull = true;
                         break;
                     }
                 }
@@ -339,7 +330,7 @@ void TetrixBoard::removeFullLines()
             }
         }
 
-        if (lineIsFull)
+        if (colIsFull)
         {
 
             int detectCounter = 0;
@@ -347,21 +338,22 @@ void TetrixBoard::removeFullLines()
             {
                 if (colorAt(j, i) == prevColor)
                 {
-                    coordsFullLine[detectCounter][0] = j;
-                    coordsFullLine[detectCounter][1] = i;
+                    coordsFullCol[detectCounter][0] = j;
+                    coordsFullCol[detectCounter][1] = i;
                     detectCounter += 1;
-                    if (detectCounter == dieLine)
-                    {
-                        break;
-                    }
                 }
                 else
                 {
+                    if (detectCounter >= 5)
+                    {
+                        break;
+                    }
+
                     for (int k = 0; k < 10; k++)
                     {
                         for (int l = 0; l < 2; l++)
                         {
-                            coordsFullLine[k][l] = 0;
+                            coordsFullCol[k][l] = 0;
                         }
                     }
                     detectCounter = 0;
@@ -371,13 +363,25 @@ void TetrixBoard::removeFullLines()
             ++numFullLines;
 
             for (int l = 0; l < detectCounter; ++l)
-                shapeAt(coordsFullLine[l][0], coordsFullLine[l][1]) = NoShape;
+                shapeAt(coordsFullCol[l][0], coordsFullCol[l][1]) = NoShape;
+        }
+    }
+
+    for (int l = 0; l < detectCounter; ++l)
+        shapeAt(coordsFullLine[l][0], BoardHeight - 1) = NoShape;
+
+    for (int k = horizonLevel; k < BoardHeight - 1; ++k)
+    {
+        for (int l = 0; l < detectCounter; ++l)
+        {
+            shapeAt(coordsFullLine[l][0], k) = shapeAt(coordsFullLine[l][0], k + 1);
+            colorAt(coordsFullLine[l][0], k) = colorAt(coordsFullLine[l][0], k + 1);
         }
     }
 
     if (numFullLines > 0) {
         numLinesRemoved += numFullLines;
-        score += 10 * numFullLines;
+        score += 100 * numFullLines;
         emit linesRemovedChanged(numLinesRemoved);
         emit scoreChanged(score);
 
@@ -391,7 +395,7 @@ void TetrixBoard::removeFullLines()
 void TetrixBoard::newPiece()
 {
     curPiece = nextPiece;
-    nextPiece.setRandomShape();
+    nextPiece.setSquareShape();
     nextPiece.setRandomColor();
     showNextPiece();
     curX = BoardWidth / 2 + 1;
@@ -414,16 +418,16 @@ void TetrixBoard::showNextPiece()
     if (!nextPieceLabel)
         return;
 
-    int dx = nextPiece.maxX() - nextPiece.minX() + 1;
-    int dy = nextPiece.maxY() - nextPiece.minY() + 1;
+    int dx = 1;
+    int dy = 1;
 
     QPixmap pixmap(dx * squareWidth(), dy * squareHeight());
     QPainter painter(&pixmap);
     painter.fillRect(pixmap.rect(), nextPieceLabel->palette().window());
 
     for (int i = 0; i < 4; ++i) {
-        int x = nextPiece.x(i) - nextPiece.minX();
-        int y = nextPiece.y(i) - nextPiece.minY();
+        int x = nextPiece.x(i);
+        int y = nextPiece.y(i);
         drawSquare(painter, x * squareWidth(), y * squareHeight(),
             nextPiece.getColor());
     }
@@ -450,11 +454,11 @@ bool TetrixBoard::tryMove(const TetrixPiece& newPiece, int newX, int newY)
 
 void TetrixBoard::drawSquare(QPainter& painter, int x, int y, QColor color)
 {
-    static constexpr QRgb colorTable[4] = {
-    0x000000, 0xCC6666, 0x66CC66, 0x6666CC
+    static constexpr QRgb colorTable[8] = {
+    0x000000, 0xCC6666, 0x66CC66, 0x6666CC,
+    0xCCCC66, 0xCC66CC, 0x66CCCC, 0xDAAA00
     };
 
-    //QColor color = colorTable[int(shape)];
     painter.fillRect(x + 1, y + 1, squareWidth() - 2, squareHeight() - 2,
         color);
 
